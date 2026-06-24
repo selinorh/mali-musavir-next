@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://aliorhun.com'),
   title: 'Ali Orhun | Serbest Muhasebeci Mali Müşavir',
   description:
     "Antalya Muratpaşa'da muhasebe, vergi danışmanlığı ve mali müşavirlik hizmetleri.",
