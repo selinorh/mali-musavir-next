@@ -35,10 +35,11 @@ export default function Footer() {
         <div className="footer-links">
           <h4>Hızlı Bağlantılar</h4>
           <ul>
-            <li><a href="#hakkimizda">Hakkımızda</a></li>
-            <li><a href="#hizmetler">Hizmetler</a></li>
-            <li><a href="#neden-biz">Neden Biz</a></li>
-            <li><a href="#iletisim">İletişim</a></li>
+            <li><a href="/#hizmetler">Hizmetler</a></li>
+            <li><a href="/pratik-bilgiler">Pratik Bilgiler</a></li>
+            <li><a href="/duyurular">Duyurular</a></li>
+            <li><a href="/#iletisim">İletişim</a></li>
+            <li><a href="/#iletisim">Randevu Al</a></li>
           </ul>
         </div>
 

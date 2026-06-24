@@ -1,36 +1,72 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 export default function Contact() {
-  const [btnState, setBtnState] = useState('idle') // idle | sending | success
+  const [btnState, setBtnState] = useState('idle') // idle | sending | success | error
   const [errors,   setErrors]   = useState({})
+  const [apiError, setApiError] = useState('')
+  const [minDate,  setMinDate]  = useState('')
   const formRef = useRef(null)
+
+  useEffect(() => {
+    setMinDate(new Date().toISOString().split('T')[0])
+  }, [])
 
   const clearError = (field) =>
     setErrors(prev => { const n = { ...prev }; delete n[field]; return n })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    const form  = formRef.current
-    const name  = form.name.value.trim()
-    const phone = form.phone.value.trim()
-    const errs  = {}
+    const form    = formRef.current
+    const name    = form.name.value.trim()
+    const phone   = form.phone.value.trim()
+    const date    = form.date.value
+    const time    = form.time.value
+    const errs    = {}
     if (!name)  errs.name  = 'Ad Soyad alanı zorunludur.'
     if (!phone) errs.phone = 'Telefon alanı zorunludur.'
+    if (!date)  errs.date  = 'Randevu tarihi zorunludur.'
+    if (!time)  errs.time  = 'Randevu saati zorunludur.'
     if (Object.keys(errs).length) { setErrors(errs); return }
 
     setErrors({})
+    setApiError('')
     setBtnState('sending')
-    setTimeout(() => {
-      setBtnState('success')
-      setTimeout(() => { form.reset(); setBtnState('idle') }, 3500)
-    }, 900)
+
+    const res = await fetch('/api/appointments', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        name,
+        phone,
+        email:   form.email.value.trim() || null,
+        date,
+        time,
+        message: form.message.value.trim() || null,
+      }),
+    })
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setApiError(data.error ?? 'Randevu gönderilemedi. Lütfen tekrar deneyin.')
+      setBtnState('error')
+      setTimeout(() => setBtnState('idle'), 3500)
+      return
+    }
+
+    setBtnState('success')
+    setTimeout(() => { form.reset(); setBtnState('idle') }, 3500)
   }
 
   const fieldStyle = (field) => errors[field] ? { borderColor: '#D9534F' } : {}
   const errSpan    = (field) => errors[field]
     ? <span style={{ fontSize: '0.78rem', color: '#D9534F', marginTop: '4px', display: 'block' }}>{errors[field]}</span>
     : null
+
+  const btnStyle =
+    btnState === 'success' ? { opacity: 1, background: '#2E7D52', borderColor: '#2E7D52' } :
+    btnState === 'error'   ? { opacity: 1, background: '#D9534F', borderColor: '#D9534F' } :
+    btnState === 'sending' ? { opacity: 0.75 } : {}
 
   return (
     <section id="iletisim" className="section-alt">
@@ -39,9 +75,9 @@ export default function Contact() {
 
           {/* ---- Info ---- */}
           <div className="contact-info reveal">
-            <span className="section-tag">İletişim</span>
-            <h2>Bugün Bir Adım<br />Atın</h2>
-            <p>Finansal sorularınız için bizimle iletişime geçin. Size özel çözümler sunmak için buradayız.</p>
+            <span className="section-tag">Randevu</span>
+            <h2>Randevu Alın,<br />Hemen Başlayalım</h2>
+            <p>Formu doldurun, size uygun tarih ve saatte ofisimizde görüşelim. Tüm finansal sorularınıza uzman desteği sunmak için buradayız.</p>
 
             <ul className="contact-list">
               <li className="contact-item">
@@ -122,36 +158,58 @@ export default function Contact() {
               <label htmlFor="email">E-posta</label>
               <input type="email" id="email" name="email" placeholder="ornek@sirket.com" />
             </div>
-            <div className="form-group">
-              <label htmlFor="subject">Hizmet</label>
-              <select id="subject" name="subject">
-                <option value="">Hizmet Seçiniz</option>
-                <option>Muhasebe &amp; Defter Tutma</option>
-                <option>Vergi Danışmanlığı</option>
-                <option>SGK &amp; Bordro</option>
-                <option>Şirket Kuruluşu</option>
-                <option>Mali Analiz &amp; Raporlama</option>
-                <option>Beyanname &amp; Vergi Süreçleri</option>
-                <option>Diğer</option>
-              </select>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="date">Randevu Tarihi *</label>
+                <input type="date" id="date" name="date" min={minDate}
+                  style={fieldStyle('date')} onChange={() => clearError('date')} />
+                {errSpan('date')}
+              </div>
+              <div className="form-group">
+                <label htmlFor="time">Randevu Saati *</label>
+                <select id="time" name="time"
+                  style={fieldStyle('time')} onChange={() => clearError('time')}>
+                  <option value="">Saat Seçiniz</option>
+                  <option>09:30</option>
+                  <option>10:00</option>
+                  <option>10:30</option>
+                  <option>11:00</option>
+                  <option>11:30</option>
+                  <option>12:00</option>
+                  <option>12:30</option>
+                  <option>13:00</option>
+                  <option>13:30</option>
+                  <option>14:00</option>
+                  <option>14:30</option>
+                  <option>15:00</option>
+                  <option>15:30</option>
+                </select>
+                {errSpan('time')}
+              </div>
             </div>
             <div className="form-group">
               <label htmlFor="message">Mesajınız</label>
               <textarea id="message" name="message" rows={4}
-                placeholder="Bize iletmek istediğiniz konuyu kısaca açıklayın..." />
+                placeholder="Görüşmek istediğiniz konuyu kısaca açıklayın..." />
             </div>
+
+            {apiError && (
+              <div style={{ background: 'rgba(217,83,79,0.07)', border: '1px solid rgba(217,83,79,0.25)', borderRadius: '8px', padding: '11px 14px', marginBottom: '16px', fontSize: '0.84rem', color: '#D9534F', textAlign: 'center' }}>
+                {apiError}
+              </div>
+            )}
+
             <button
               type="submit"
               className="btn btn-gold btn-full"
               id="submitBtn"
               disabled={btnState !== 'idle'}
-              style={
-                btnState === 'success' ? { opacity: 1, background: '#2E7D52', borderColor: '#2E7D52' } :
-                btnState === 'sending' ? { opacity: 0.75 } : {}
-              }
+              style={btnStyle}
             >
               {btnState === 'sending' ? 'Gönderiliyor...' :
-               btnState === 'success' ? 'Mesajınız İletildi ✓' : 'Mesaj Gönder'}
+               btnState === 'success' ? 'Randevu Talebiniz Alındı ✓' :
+               btnState === 'error'   ? 'Gönderim Başarısız ✕' :
+               'Randevu Talebi Gönder'}
             </button>
             <p className="form-note">* Zorunlu alanlar. Bilgileriniz gizli tutulur.</p>
           </form>

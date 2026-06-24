@@ -16,7 +16,7 @@ export default function ScrollRevealInit() {
     )
 
     document.querySelectorAll('.reveal').forEach((el, i) => {
-      el.style.transitionDelay = `${(i % 3) * 0.1}s`
+      el.style.transitionDelay = `${(i % 3) * 0.05}s`
       observer.observe(el)
     })
 

@@ -1,18 +1,24 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 
 const navLinks = [
-  { href: '#hakkimizda', label: 'Hakkımızda' },
-  { href: '#hizmetler',  label: 'Hizmetler'  },
-  { href: '#neden-biz',  label: 'Neden Biz'  },
-  { href: '#iletisim',   label: 'İletişim'   },
+  { href: '#hizmetler',       label: 'Hizmetler',       anchor: true  },
+  { href: '/duyurular',       label: 'Duyurular',        anchor: false },
+  { href: '/pratik-bilgiler', label: 'Pratik Bilgiler',  anchor: false },
+  { href: '#iletisim',        label: 'İletişim',         anchor: true  },
 ]
 
 export default function Navbar() {
-  const [scrolled,       setScrolled]       = useState(false)
-  const [menuOpen,       setMenuOpen]        = useState(false)
-  const [activeSection,  setActiveSection]   = useState('')
+  const [scrolled,      setScrolled]      = useState(false)
+  const [menuOpen,      setMenuOpen]      = useState(false)
+  const [activeSection, setActiveSection] = useState('')
   const navbarRef = useRef(null)
+  const pathname  = usePathname()
+  const isHome    = pathname === '/'
+
+  // On sub-pages there's no dark hero so always show the solid navbar
+  const isScrolled = scrolled || !isHome
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -22,24 +28,19 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
+    if (!isHome) return
     const sections = document.querySelectorAll('section[id]')
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) setActiveSection(entry.target.id)
-        })
-      },
+      (entries) => entries.forEach(e => { if (e.isIntersecting) setActiveSection(e.target.id) }),
       { rootMargin: '-40% 0px -55% 0px' }
     )
     sections.forEach(s => observer.observe(s))
     return () => observer.disconnect()
-  }, [])
+  }, [isHome])
 
   useEffect(() => {
     const onOutsideClick = (e) => {
-      if (navbarRef.current && !navbarRef.current.contains(e.target)) {
-        setMenuOpen(false)
-      }
+      if (navbarRef.current && !navbarRef.current.contains(e.target)) setMenuOpen(false)
     }
     document.addEventListener('click', onOutsideClick)
     return () => document.removeEventListener('click', onOutsideClick)
@@ -47,10 +48,24 @@ export default function Navbar() {
 
   const closeMenu = () => setMenuOpen(false)
 
+  const getLinkHref = ({ href, anchor }) =>
+    anchor ? (isHome ? href : `/${href}`) : href
+
+  const isActive = ({ href, anchor }) =>
+    anchor
+      ? (isHome && activeSection === href.slice(1))
+      : pathname === href
+
+  const randevuHref = isHome ? '#iletisim' : '/#iletisim'
+
   return (
-    <header id="navbar" ref={navbarRef} className={scrolled ? 'scrolled' : ''}>
+    <header id="navbar" ref={navbarRef} className={isScrolled ? 'scrolled' : ''}>
       <div className="container nav-inner">
-        <a href="#" className="logo" aria-label="Ali Orhun – Serbest Muhasebeci Mali Müşavir">
+        <a
+          href={isHome ? '#' : '/'}
+          className="logo"
+          aria-label="Ali Orhun – Serbest Muhasebeci Mali Müşavir"
+        >
           <img src="/ao-logo.png" alt="AO" className="logo-icon" />
           <div className="logo-sep" />
           <div className="logo-wordmark">
@@ -70,19 +85,19 @@ export default function Navbar() {
 
         <nav id="nav-menu" className={menuOpen ? 'open' : ''}>
           <ul>
-            {navLinks.map(({ href, label }) => (
-              <li key={href}>
+            {navLinks.map((link) => (
+              <li key={link.href}>
                 <a
-                  href={href}
-                  className={activeSection === href.slice(1) ? 'active' : ''}
+                  href={getLinkHref(link)}
+                  className={isActive(link) ? 'active' : ''}
                   onClick={closeMenu}
                 >
-                  {label}
+                  {link.label}
                 </a>
               </li>
             ))}
           </ul>
-          <a href="#iletisim" className="btn btn-gold nav-cta" onClick={closeMenu}>
+          <a href={randevuHref} className="btn btn-gold nav-cta" onClick={closeMenu}>
             Randevu Al
           </a>
         </nav>

@@ -79,9 +79,21 @@ export default function Services() {
           <h2>Size Özel<br />Finansal Çözümler</h2>
           <p>İşletmenizin ihtiyaç duyduğu tüm mali ve muhasebe hizmetlerini tek çatı altında sunuyoruz.</p>
         </div>
-        <div className="services-grid">
+      </div>
+
+      {/* Full-bleed carousel — fades at edges on desktop, scrollable on mobile */}
+      <div className="services-carousel-outer" aria-label="Hizmetlerimiz">
+        <div className="services-carousel-track">
           {services.map((s) => (
-            <div key={s.title} className="service-card reveal">
+            <div key={s.title} className="service-card">
+              <div className="service-icon">{s.icon}</div>
+              <h3>{s.title}</h3>
+              <p>{s.desc}</p>
+            </div>
+          ))}
+          {/* Duplicate set for seamless loop (hidden on mobile via CSS) */}
+          {services.map((s) => (
+            <div key={`dup-${s.title}`} className="service-card" aria-hidden="true">
               <div className="service-icon">{s.icon}</div>
               <h3>{s.title}</h3>
               <p>{s.desc}</p>
