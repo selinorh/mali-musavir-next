@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -84,7 +84,7 @@ async function safeFetch(url: string, timeoutMs = 8000): Promise<string | null> 
         'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.5',
         'Cache-Control':   'no-cache',
       },
-      next: { revalidate: 3600 },
+      cache: 'no-store',
     })
     clearTimeout(timer)
     if (!res.ok) return null
@@ -469,28 +469,31 @@ export async function GET() {
     return item
   })
 
-  return NextResponse.json({
-    announcements: all,
-    sources: {
-      sgk: {
-        success:     sgkResult.items.length > 0,
-        count:       sgkResult.items.length,
-        method:      sgkResult.method,
-        officialUrl: 'https://www.sgk.gov.tr/duyuru',
+  return NextResponse.json(
+    {
+      announcements: all,
+      sources: {
+        sgk: {
+          success:     sgkResult.items.length > 0,
+          count:       sgkResult.items.length,
+          method:      sgkResult.method,
+          officialUrl: 'https://www.sgk.gov.tr/duyuru',
+        },
+        gib: {
+          success:     gibResult.items.length > 0,
+          count:       gibResult.items.length,
+          method:      gibResult.method,
+          officialUrl: 'https://www.gib.gov.tr',
+        },
+        rg: {
+          success:     rgResult.items.length > 0,
+          count:       rgResult.items.length,
+          method:      rgResult.method,
+          officialUrl: 'https://www.resmigazete.gov.tr',
+        },
       },
-      gib: {
-        success:     gibResult.items.length > 0,
-        count:       gibResult.items.length,
-        method:      gibResult.method,
-        officialUrl: 'https://www.gib.gov.tr',
-      },
-      rg: {
-        success:     rgResult.items.length > 0,
-        count:       rgResult.items.length,
-        method:      rgResult.method,
-        officialUrl: 'https://www.resmigazete.gov.tr',
-      },
+      fetched_at: new Date().toISOString(),
     },
-    fetched_at: new Date().toISOString(),
-  })
+    { headers: { 'Cache-Control': 'no-store' } },
+  )
 }

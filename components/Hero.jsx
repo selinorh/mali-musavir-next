@@ -1,9 +1,11 @@
-import HeroDots from './HeroDots'
+import HeroWebGL from './HeroWebGL'
+// import HeroDots from './HeroDots'   ← geri almak için bu ikisini takas edin
 
 export default function Hero() {
   return (
     <section id="hero">
-      <HeroDots />
+      <HeroWebGL />
+      {/* <HeroDots /> */}
       <div className="container hero-content">
         <p className="hero-tag">Serbest Muhasebeci Mali Müşavirlik</p>
         <h1>İşinizin Finansal<br />Güvencesi Yanınızda</h1>
